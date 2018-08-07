@@ -1,3 +1,8 @@
-#index:
-#    path: /
-#    controller: App\Controller\DefaultController::index
+homepage:
+    path: /
+    controller: App\Controller\DefaultController::index
+
+app_tag_autocomplete:
+    path: /autocomplete-tag
+    controller: App\Controller\DefaultController::autocompleteTag
+    options: { expose: true }

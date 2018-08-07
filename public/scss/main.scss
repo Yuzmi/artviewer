@@ -1,0 +1,57 @@
+html, body {
+	background-color:#f9f9f9;
+}
+
+nav {
+	padding:10px;
+
+	h1 {
+		font-size:2rem;
+
+		a:hover {
+			text-decoration:none;
+		}
+	}
+
+	form {
+		justify-content:center;
+
+		button[type=submit] {
+			width:100%;
+
+			@media (min-width: 576px) {
+				width:initial;
+			}
+		}
+	}
+}
+
+.arts {
+	background-color:#292929;
+	color:white;
+}
+
+.art {
+	background-position:center;
+	background-repeat:no-repeat;
+	background-size:cover;
+	display:inline-block;
+	height:100px;
+	position:relative;
+	vertical-align:middle;
+	width:100px;
+
+	img.website {
+		bottom:2px;
+		height:16px;
+		position:absolute;
+		right:2px;
+		width:16px;
+	}
+}
+
+.ui-menu.ui-autocomplete .ui-menu-item-wrapper {
+	font-size:0.8em;
+	padding-bottom:1px;
+	padding-top:1px;
+}
