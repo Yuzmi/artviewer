@@ -19,7 +19,7 @@ class DeviantArt extends Parser
 		} elseif($q == "hot") {
 			$url = "https://backend.deviantart.com/rss.xml?q=boost%3Ahot+meta%3Aall&type=deviation";
 		} else {
-			$url = "https://backend.deviantart.com/rss.xml?q=boost%3Apopular+max_age%3A8h+meta%3Aall&type=deviation";
+			$url = "https://backend.deviantart.com/rss.xml?q=boost%3Ahot+meta%3Aall&type=deviation";
 		}
 
 		$data = $this->getUrlData($url);
@@ -36,7 +36,7 @@ class DeviantArt extends Parser
 			} catch(\Exception $e) {
 				$url = null;
 			}
-			if(!$url) {
+			if(!$url && filter_var($url, FILTER_VALIDATE_URL) !== false) {
 				continue;
 			}
 
@@ -50,60 +50,49 @@ class DeviantArt extends Parser
 			$item->setUpdateDate(new \DateTime());
 
 			// Publication date
-			if(!$item->getPublishedDate()) {
-				$publishedDate = null;
-				try {
-					$publishedDateString = $entry->filter("pubDate")->eq(0)->text();
-					if($publishedDateString) {
-						$publishedDateTimestamp = strtotime($publishedDateString);
-						if($publishedDateTimestamp) {
-							$publishedDate = new \DateTime();
-							$publishedDate->setTimestamp($publishedDateTimestamp);
-						}
+			try {
+				$publishedDateString = $entry->filter("pubDate")->eq(0)->text();
+				if($publishedDateString) {
+					$publishedDateTimestamp = strtotime($publishedDateString);
+					if($publishedDateTimestamp) {
+						$publishedDate = new \DateTime();
+						$publishedDate->setTimestamp($publishedDateTimestamp);
+						
+						$item->setPublishedDate($publishedDate);
 					}
-				} catch(\Exception $e) {}
-				
-				if($publishedDate) {
-					$item->setPublishedDate($publishedDate);
-				} else {
-					$item->setPublishedDate(new \DateTime());
+				}
+			} catch(\Exception $e) {}
+
+			// Title
+			if($entry->filter("title")->count() > 0) {
+				$title = $this->sanitizeText($entry->filter("title")->eq(0)->text());
+				if($title) {
+					$item->setTitle($title);
 				}
 			}
 
-			// Title
-			try {
-				$title = $entry->filter("title")->eq(0)->text();
-			} catch(\Exception $e) {
-				$title = null;
-			}
-			if($title) {
-				$item->setTitle($title);
-			}
-
-			// Preview Url
-			$previewUrl = $this->getPreviewUrl($entry);
-			if($previewUrl) {
-				$item->setPreviewUrl($previewUrl);
+			// Thumbnail Url
+			$thumbnailUrl = $this->getThumbnailUrlFromRss($entry);
+			if($thumbnailUrl) {
+				$item->setThumbnailUrl($thumbnailUrl);
 			}
 
 			// Rating
-			$rating = $this->getRating($entry);
+			$rating = $this->getRatingFromRss($entry);
 			if($rating == "adult") {
 				$item->setIsAdult(true);
 			} elseif($rating == "nonadult") {
 				$item->setIsAdult(false);
 			}
 
-			if($item->getPreviewUrl()) {
-				$this->em->persist($item);
-			}
+			$this->em->persist($item);
 		}
 
 		$this->em->flush();
 	}
 
-	private function getPreviewUrl(Crawler $entry) {
-		$previewUrl = null;
+	private function getThumbnailUrlFromRss(Crawler $entry) {
+		$thumbnailUrl = null;
 
 		// Get from media:thumbnail
 		$children = $entry->children();
@@ -115,14 +104,14 @@ class DeviantArt extends Parser
 					filter_var($url, FILTER_VALIDATE_URL) !== false
 					&& preg_match('#t00\.deviantart.*fixed_height\(100,100\):origin\(\)/pre00/#isU', $url)
 				) {
-					$previewUrl = $url;
+					$thumbnailUrl = $url;
 					break;
 				}
 			}
 		}
 
 		// Or from the description
-		if(!$previewUrl) {
+		if(!$thumbnailUrl) {
 			try {
 				$description = $entry->filter("description")->eq(0)->html();
 				$descriptionHtml = html_entity_decode($description);
@@ -142,16 +131,16 @@ class DeviantArt extends Parser
 				// Get the thumbnail
 				foreach($urls as $url) {
 					if(preg_match('#^https?://t00\.deviantart.*fixed_height\(100,100\):origin\(\)/pre00/#isU', $url)) {
-						$previewUrl = $url;
+						$thumbnailUrl = $url;
 						break;
 					}
 				}
 
 				// Or the original as a fallback
-				if(!$previewUrl) {
+				if(!$thumbnailUrl) {
 					foreach($urls as $url) {
 						if(preg_match('#^https?://orig00\.deviantart#isU', $url)) {
-							$previewUrl = $url;
+							$thumbnailUrl = $url;
 							break;
 						}
 					}
@@ -159,10 +148,10 @@ class DeviantArt extends Parser
 			} catch(\Exception $e) {}
 		}
 
-		return $previewUrl;
+		return $thumbnailUrl;
 	}
 
-	private function getRating(Crawler $entry) {
+	private function getRatingFromRss(Crawler $entry) {
 		$rating = null;
 
 		$children = $entry->children();
@@ -175,5 +164,56 @@ class DeviantArt extends Parser
 		}
 
 		return $rating;
+	}
+
+	public function parseItem(Item $item) {
+		$data = $this->getUrlData($item->getUrl());
+		if(!$data["success"]) return;
+
+		$crawler = new Crawler($data["content"]);
+
+		// Tags //
+
+		$rawTags = [];
+
+		$elementTags = $crawler->filter(".dev-about-tags-cc .discoverytag");
+		for($i=0,$count=$elementTags->count();$i<$count;$i++) {
+			$elementTag = $elementTags->eq($i);
+
+			$rawTag = $this->sanitizeString($elementTag->attr("data-canonical-tag"));
+			if($rawTag != "" && !in_array($rawTag, $rawTags)) {
+				$rawTags[] = $rawTag;
+			}
+		}
+
+		$tags = [];
+		foreach($rawTags as $rawTag) {
+			$tag = $this->em->getRepository(Tag::class)->findOneByName($rawTag);
+			if(!$tag) {
+				$tag = new Tag();
+				$tag->setName($rawTag);
+				$this->em->persist($tag);
+			}
+
+			$tags[] = $tag;
+		}
+		$this->em->flush();
+
+		foreach($tags as $tag) {
+			$item->addTag($tag);
+		}
+
+		$tags = new ArrayCollection($tags);
+		foreach($item->getTags() as $tag) {
+			if(!$tags->contains($tag)) {
+				$item->removeTag($tag);
+			}
+		}
+
+		$item->setUpdateDate(new \DateTime());
+		$item->setParseDate(new \DateTime());
+
+		$this->em->persist($item);
+		$this->em->flush();
 	}
 }

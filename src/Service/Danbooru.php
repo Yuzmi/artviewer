@@ -56,16 +56,11 @@ class Danbooru extends Parser
 			$item->setUpdateDate(new \DateTime());
 
 			// Publication date
-			if(!$item->getPublishedDate()) {
-				$publishedDate = $i->get_date(DATE_ATOM);
-				if($publishedDate) {
-					$publishedDate = new \DateTime($publishedDate);
-				}
-
+			$publishedDate = $i->get_date(DATE_ATOM);
+			if($publishedDate) {
+				$publishedDate = new \DateTime($publishedDate);
 				if($publishedDate) {
 					$item->setPublishedDate($publishedDate);
-				} else {
-					$item->setPublishedDate(new \DateTime());
 				}
 			}
 
@@ -78,17 +73,17 @@ class Danbooru extends Parser
 			$content = $i->get_content(true);
 			$crawler = new Crawler($content);
 
-			// Preview URL
+			// Thumbnail URL
 			try {
 				$url = $crawler->filter("img")->eq(0)->attr("src");
 				if(filter_var($url, FILTER_VALIDATE_URL) !== false) {
-					$previewUrl = $url;
+					$thumbnailUrl = $url;
 				}
 			} catch(\Exception $e) {
-				$previewUrl = null;
+				$thumbnailUrl = null;
 			}
-			if($previewUrl) {
-				$item->setPreviewUrl($previewUrl);
+			if($thumbnailUrl) {
+				$item->setThumbnailUrl($thumbnailUrl);
 			}
 
 			// Tags (in the summary)
@@ -121,6 +116,39 @@ class Danbooru extends Parser
 			$this->em->persist($item);
 		}
 
+		$this->em->flush();
+	}
+
+	public function parseItem(Item $item) {
+		$data = $this->getUrlData($item->getUrl());
+		if(!$data["success"]) return;
+
+		$crawler = new Crawler($data["content"]);
+
+		$infoSections = $crawler->filter("section#post-information");
+		if($infoSections->count() > 0) {
+			$infoSection = $infoSections->eq(0);
+			$infos = $infoSection->filter("ul li");
+			for($i=0,$count=$infos->count();$i<$count;$i++) {
+				$info = $infos->eq($i);
+
+				// Rating
+				$infoText = mb_strtolower($info->text());
+				if(strpos($infoText, "rating") !== false) {
+					if(strpos($infoText, "safe") !== false) {
+						$item->setIsAdult(false);
+					} elseif(strpos($infoText, "explicit") !== false
+					|| strpos($infoText, "questionable") !== false) {
+						$item->setIsAdult(true);
+					}
+				}
+			}
+		}
+
+		$item->setUpdateDate(new \DateTime());
+		$item->setParseDate(new \DateTime());
+
+		$this->em->persist($item);
 		$this->em->flush();
 	}
 }

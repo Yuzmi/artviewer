@@ -13,18 +13,34 @@ class DefaultController extends Controller
     public function index(Request $request) {
         $em = $this->getDoctrine()->getManager();
 
+        $defaultLimit = 100;
+
+        // Limit
+        $limit = (int) $request->query->get("limit", $defaultLimit);
+        if($limit <= 0 || $limit > 1000) {
+            $limit = $defaultLimit;
+        }
+
         $page = max(1, $request->query->get("page", 1));
-        $limit = 60;
         $offset = $limit * ($page - 1);
 
         // Get items ids
-        $qb = $em->getRepository(Item::class)->createQueryBuilder("i");
+        $qb = $em->getRepository(Item::class)->createQueryBuilder("i")
+            ->andWhere("i.thumbnailUrl IS NOT NULL");
 
         // Website filter
         $website = trim($request->query->get("website"));
         if($website) {
             $qb->andWhere("i.website = :website");
             $qb->setParameter("website", $website);
+        }
+
+        // Rating filter
+        $rating = $request->query->get("rating");
+        if($rating == "safe") {
+            $qb->andWhere("i.isAdult = 0");
+        } elseif($rating == "adult") {
+            $qb->andWhere("i.isAdult = 1");
         }
 
         // Tags filter
@@ -70,11 +86,13 @@ class DefaultController extends Controller
         $websites = [
             "danbooru" => "Danbooru",
             "deviantart" => "DeviantArt",
-            "konachan" => "Konachan"
+            "konachan" => "Konachan",
+            "safebooru" => "Safebooru"
         ];
 
         return $this->render('default/index.html.twig', [
             "items" => $items,
+            "limit" => $limit,
             "page" => $page,
             "pageCount" => $pageCount,
             "websites" => $websites

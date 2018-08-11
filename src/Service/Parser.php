@@ -67,6 +67,8 @@ class Parser
     }
 
     public function getPieItems($url, $options = []) {
+        $items = [];
+
         $data = $this->getUrlData($url);
         if($data["success"]) {
             $pie = new \SimplePie();
@@ -75,11 +77,11 @@ class Parser
 
             $pie_init = $pie->init();
             if($pie_init && $pie->get_item_quantity() > 0) {
-                return $pie->get_items();
+                $items = $pie->get_items();
             }
         }
 
-        return [];
+        return $items;
     }
 
     public function sanitizeString($string, $maxLength = 191) {

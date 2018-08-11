@@ -7,13 +7,6 @@ nav {
     font-size: 2rem; }
     nav h1 a:hover {
       text-decoration: none; }
-  nav form {
-    justify-content: center; }
-    nav form button[type=submit] {
-      width: 100%; }
-      @media (min-width: 576px) {
-        nav form button[type=submit] {
-          width: initial; } }
 
 .arts {
   background-color: #292929;

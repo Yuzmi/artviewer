@@ -12,18 +12,6 @@ nav {
 			text-decoration:none;
 		}
 	}
-
-	form {
-		justify-content:center;
-
-		button[type=submit] {
-			width:100%;
-
-			@media (min-width: 576px) {
-				width:initial;
-			}
-		}
-	}
 }
 
 .arts {

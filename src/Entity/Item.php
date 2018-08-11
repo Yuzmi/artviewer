@@ -44,9 +44,14 @@ class Item
     private $publishedDate;
 
     /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $parseDate;
+
+    /**
      * @ORM\Column(type="text", nullable=true)
      */
-    private $previewUrl;
+    private $thumbnailUrl;
 
     /**
      * @ORM\Column(type="text", nullable=true)
@@ -72,6 +77,7 @@ class Item
     public function __construct()
     {
         $this->createDate = new \DateTime();
+        $this->publishedDate = new \DateTime();
         $this->tags = new ArrayCollection();
     }
 
@@ -82,6 +88,8 @@ class Item
             return "img/website/konachan.png";
         } elseif($this->website == "deviantart") {
             return "img/website/deviantart.png";
+        } elseif($this->website == "safebooru") {
+            return "img/website/safebooru.png";
         }
         return null;
     }
@@ -128,14 +136,14 @@ class Item
         return $this;
     }
 
-    public function getPreviewUrl(): ?string
+    public function getThumbnailUrl(): ?string
     {
-        return $this->previewUrl;
+        return $this->thumbnailUrl;
     }
 
-    public function setPreviewUrl(?string $previewUrl): self
+    public function setThumbnailUrl(?string $thumbnailUrl): self
     {
-        $this->previewUrl = $previewUrl;
+        $this->thumbnailUrl = $thumbnailUrl;
 
         return $this;
     }
@@ -222,6 +230,18 @@ class Item
     public function setPublishedDate(\DateTimeInterface $publishedDate): self
     {
         $this->publishedDate = $publishedDate;
+
+        return $this;
+    }
+
+    public function getParseDate(): ?\DateTimeInterface
+    {
+        return $this->parseDate;
+    }
+
+    public function setParseDate(?\DateTimeInterface $parseDate): self
+    {
+        $this->parseDate = $parseDate;
 
         return $this;
     }

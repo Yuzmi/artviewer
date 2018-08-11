@@ -6,15 +6,15 @@ use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ParseKonachanRssCommand extends ContainerAwareCommand {
+class ParseSafebooruRssCommand extends ContainerAwareCommand {
 	protected function configure() {
 		$this
-			->setName("app:parse:konachan:rss")
+			->setName("app:parse:safebooru:rss")
 		;
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
-		$output->writeln("Parsing Konachan RSS...");
-		$this->getContainer()->get("App\Service\Konachan")->parseRss();
+		$output->writeln("Parsing Safebooru RSS...");
+		$this->getContainer()->get("App\Service\Safebooru")->parseRss();
 	}
 }

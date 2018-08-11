@@ -4,19 +4,22 @@ namespace App\Service;
 
 use App\Entity\Item;
 use App\Entity\Tag;
+use App\Service\phpUri;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\DomCrawler\Crawler;
 
-class Konachan extends Parser
+class Safebooru extends Parser
 {
+	private $websiteUrl = "http://safebooru.org/";
+
 	public function parseRss() {
-		$rssItems = $this->getPieItems("https://konachan.com/post/atom");
-		
+		$rssItems = $this->getPieItems("http://safebooru.org/index.php?page=cooliris");
+
 		// Get tags from items
 		$rawTags = [];
 		foreach($rssItems as $i) {
-			$summary = $i->get_description(true);
-			$iTags = explode(" ", $summary);
+			$title = $i->get_title();
+			$iTags = explode(" ", $title);
 			foreach($iTags as $tag) {
 				$tag = $this->sanitizeString($tag);
 				if($tag != "" && !in_array($tag, $rawTags)) {
@@ -38,7 +41,6 @@ class Konachan extends Parser
 		}
 		$this->em->flush();
 
-		// Save items
 		foreach($rssItems as $i) {
 			// Link
 			$url = $i->get_link();
@@ -46,11 +48,14 @@ class Konachan extends Parser
 				continue;
 			}
 
+			$url = phpUri::parse($this->websiteUrl)->join($url);
+			$url = str_replace("&amp;", "&", $url);
+
 			$item = $this->em->getRepository(Item::class)->findOneByUrl($url);
 			if(!$item) {
 				$item = new Item();
 				$item->setUrl($url);
-				$item->setWebsite("konachan");
+				$item->setWebsite("safebooru");
 			}
 
 			$item->setUpdateDate(new \DateTime());
@@ -71,35 +76,11 @@ class Konachan extends Parser
 			}
 
 			// Thumbnail URL
-			$thumbnailUrl = $i->get_link(0, "enclosure");
-			if(filter_var($thumbnailUrl, FILTER_VALIDATE_URL) !== false) {
-				$item->setThumbnailUrl($thumbnailUrl);
-			}
-
-			// Tags (in the summary)
-			$summary = $i->get_description(true);
-			$iNewTags = [];
-
-			// Get tags for item
-			$iRawTags = explode(" ", $summary);
-			foreach($iRawTags as $iRawTag) {
-				$iRawTag = $this->sanitizeString($iRawTag);
-
-				if($iRawTag != "" && array_key_exists($iRawTag, $tags)) {
-					$iNewTags[] = $tags[$iRawTag];
-				}
-			}
-
-			// Add new tags
-			foreach($iNewTags as $iNewTag) {
-				$item->addTag($iNewTag);
-			}
-
-			// Remove obsolete tags
-			$iNewTags = new ArrayCollection($iNewTags);
-			foreach($item->getTags() as $tag) {
-				if(!$iNewTags->contains($tag)) {
-					$item->removeTag($tag);
+			$thumbnail = $i->get_thumbnail();
+			if($thumbnail && isset($thumbnail["url"])) {
+				$thumbnailUrl = phpUri::parse($this->websiteUrl)->join($thumbnail["url"]);
+				if(filter_var($thumbnailUrl, FILTER_VALIDATE_URL) !== false) {
+					$item->setThumbnailUrl($thumbnailUrl);
 				}
 			}
 

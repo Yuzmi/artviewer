@@ -1,36 +1,61 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<nav>
+<nav class="container">
 	<h1 class="text-center">
 		<a href="{{ path('homepage') }}">
 			Art Viewer
 		</a>
 	</h1>
-	<form class="form-inline form-sm mt-3">
-		<select class="form-control form-control-sm" name="website">
-			<option value="">All websites</option>
-			{% for key,value in websites %}
-				<option value="{{ key }}" {{ app.request.query.get('website') == key ? "selected" }}>
-					{{ value }}
-				</option>
-			{% endfor %}
-		</select>
+	<form class="form-sm mt-3">
+		<input class="form-control form-control-sm mb-2 mt-2 autocomplete-tags" type="search" name="tags" value="{{ app.request.query.get('tags') }}" placeholder="Search tags..." autocomplete="off">
 
-		<input class="form-control form-control-sm mt-2 mt-sm-0 ml-sm-3 autocomplete-tags" type="search" name="tags" value="{{ app.request.query.get('tags') }}" placeholder="Search tags..." autocomplete="off">
+		<div class="row">
+			<div class="col-12 col-sm-4">
+				<select class="form-control form-control-sm" name="website">
+					<option value="">All websites</option>
+					{% for key,value in websites %}
+						<option value="{{ key }}" {{ app.request.query.get('website') == key ? "selected" }}>
+							{{ value }}
+						</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div class="col-12 col-sm-4">
+				<select class="form-control form-control-sm mt-2 mt-sm-0" name="rating">
+					<option value="">All ratings</option>
+					<option value="safe" {{ app.request.query.get("rating") == "safe" ? "selected" }}>
+						Safe
+					</option>
+					<option value="adult" {{ app.request.query.get("rating") == "adult" ? "selected" }}>
+						Adult / Questionable
+					</option>
+				</select>
+			</div>
+			<div class="col-12 col-sm-4">
+				{% set limits = [25,50,100,200,500] %}
+				<select class="form-control form-control-sm mt-2 mt-sm-0" name="limit">
+					{% for l in limits %}
+						<option value="{{ l }}" {{ limit == l ? "selected" }}>
+							{{ l }} per page
+						</option>
+					{% endfor %}
+				</select>
+			</div>
+		</div>
 
-		<button class="btn btn-primary btn-sm mt-2 mt-sm-0 ml-sm-3" type="submit">
+		<button class="btn btn-primary btn-block btn-sm mt-2" type="submit">
 			Filter
 		</button>
 	</form>
 </nav>
 
 <div class="arts mt-2 pb-4 pt-4">
-	<div class="container text-center">
+	<div class="container-fluid text-center">
 		{% if pageCount > 0 %}
 			{% spaceless %}
 				{% for item in items %}
-					<a class="art" href="{{ item.url }}" style="background-image:url('{{ item.previewUrl }}')" target="_blank" rel="noopener noreferrer" title="{{ item.title }}">
+					<a class="art" href="{{ item.url }}" style="background-image:url('{{ item.thumbnailUrl }}')" target="_blank" rel="noopener noreferrer" title="{{ item.title }}">
 						<img class="website" src="{{ asset(item.websitePicture) }}" alt="">
 					</a>
 				{% endfor %}
