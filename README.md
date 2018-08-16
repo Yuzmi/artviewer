@@ -26,11 +26,12 @@ setfacl -R -m u:www-data:rwX var/cache var/log
 setfacl -dR -m u:www-data:rwX var/cache var/log
 ```
 
-# Apache config
+# Server configuration
+See [here](https://symfony.com/doc/current/setup/web_server_configuration.html) for the whole configuration.  
 ```
+# Apache : install .htaccess
 composer require symfony/apache-pack
-```
-You may need "AllowOverride All" in your apache config.  
+``` 
 
 # CRON
 ```
