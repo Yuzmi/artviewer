@@ -109,7 +109,7 @@ class DefaultController extends Controller
             ->select("t.name")
             ->where("t.name LIKE :name")->setParameter("name", $term."%")
             ->orderBy("t.name", "ASC")
-            ->setMaxResults(20)
+            ->setMaxResults(10)
             ->getQuery()->getResult();
 
         $names = [];

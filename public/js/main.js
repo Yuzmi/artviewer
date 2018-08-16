@@ -20,7 +20,7 @@ var app = {
 					},
 					search: function() {
 						var term = app.autocompleteTags.utils.extractLast(this.value);
-						if(term.length < 2) {
+						if(term.length < 1) {
 							return false;
 						}
 					},
