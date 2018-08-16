@@ -35,7 +35,7 @@ class ParseItemsCommand extends ContainerAwareCommand {
 		}
 
 		if($input->getOption("recent")) {
-			$qb->andWhere("i.parseDate IS NULL OR i.parseDate >= :recently");
+			$qb->andWhere("i.publishedDate >= :recently");
 			$qb->setParameter("recently", new \DateTime("2 days ago"));
 		}
 
