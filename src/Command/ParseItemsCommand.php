@@ -14,6 +14,7 @@ class ParseItemsCommand extends ContainerAwareCommand {
 			->setName("app:parse:items")
 			->addOption("website", "w", InputOption::VALUE_REQUIRED)
 			->addOption("unparsed", null, InputOption::VALUE_NONE)
+			->addOption("recent", null, InputOption::VALUE_NONE)
 		;
 	}
 
@@ -31,6 +32,11 @@ class ParseItemsCommand extends ContainerAwareCommand {
 
 		if($input->getOption("unparsed")) {
 			$qb->andWhere("i.parseDate IS NULL");
+		}
+
+		if($input->getOption("recent")) {
+			$qb->andWhere("i.parseDate IS NULL OR i.parseDate >= :recently");
+			$qb->setParameter("recently", new \DateTime("2 days ago"));
 		}
 
 		$items = $qb->getQuery()->getResult();
