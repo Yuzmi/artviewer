@@ -14,9 +14,29 @@ nav {
 	}
 }
 
-.arts {
+.content {
 	background-color:#292929;
 	color:white;
+}
+
+.tags {
+	overflow:hidden;
+}
+
+.tag {
+	font-size:80%;
+
+	a {
+		color:white;
+
+		&:hover {
+			text-decoration:none;
+		}
+	}
+
+	.countItems {
+		color:#999;
+	}
 }
 
 .art {

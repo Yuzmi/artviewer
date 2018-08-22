@@ -52,7 +52,7 @@ class DefaultController extends Controller
             $tag = trim($tag);
             if($tag != "") {
                 $qb->innerJoin("i.tags", "t".$i);
-                $qb->andWhere("t".$i.".name LIKE :tag".$i);
+                $qb->andWhere("t".$i.".name = :tag".$i);
                 $qb->setParameter("tag".$i, $tag);
                 $i++;
             }
@@ -83,11 +83,33 @@ class DefaultController extends Controller
             ->orderBy("i.publishedDate", "DESC")
             ->getQuery()->getResult();
 
+        // Get tags
+        /*$tags = $em->getRepository(Tag::class)->createQueryBuilder("t")
+            ->innerJoin("t.items", "i")
+            ->where("i.id IN (:itemIds)")->setParameter("itemIds", $itemIds)
+            ->getQuery()->getResult();
+
+        $tagIds = [];
+        foreach($tags as $t) {
+            $tagIds[] = $t->getId();
+        }
+
+        // Get tags data
+        $tagData = $em->getRepository(Tag::class)->createQueryBuilder("t")
+            ->select("t AS tag, COUNT(i.id) AS countItems")
+            ->leftJoin("t.items", "i")
+            ->where("t.id IN (:ids)")->setParameter("ids", $tagIds)
+            ->groupBy("t")
+            ->having("countItems > 0")
+            ->orderBy("t.name", "ASC")
+            ->getQuery()->getResult();*/
+
         $websites = [
             "danbooru" => "Danbooru",
             "deviantart" => "DeviantArt",
             "konachan" => "Konachan",
-            "safebooru" => "Safebooru"
+            "safebooru" => "Safebooru",
+            "sankakucomplex" => "Sankaku Complex"
         ];
 
         return $this->render('default/index.html.twig', [

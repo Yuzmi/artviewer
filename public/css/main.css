@@ -8,9 +8,21 @@ nav {
     nav h1 a:hover {
       text-decoration: none; }
 
-.arts {
+.content {
   background-color: #292929;
   color: white; }
+
+.tags {
+  overflow: hidden; }
+
+.tag {
+  font-size: 80%; }
+  .tag a {
+    color: white; }
+    .tag a:hover {
+      text-decoration: none; }
+  .tag .countItems {
+    color: #999; }
 
 .art {
   background-position: center;

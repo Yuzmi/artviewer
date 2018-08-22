@@ -74,6 +74,7 @@ class Danbooru extends Parser
 			$crawler = new Crawler($content);
 
 			// Thumbnail URL
+			$thumbnail = null;
 			try {
 				$url = $crawler->filter("img")->eq(0)->attr("src");
 				if(filter_var($url, FILTER_VALIDATE_URL) !== false) {

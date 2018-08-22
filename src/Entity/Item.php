@@ -90,6 +90,8 @@ class Item
             return "img/website/deviantart.png";
         } elseif($this->website == "safebooru") {
             return "img/website/safebooru.png";
+        } elseif($this->website == "sankakucomplex") {
+            return "img/website/sankakucomplex.png";
         }
         return null;
     }

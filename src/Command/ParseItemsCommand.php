@@ -58,6 +58,8 @@ class ParseItemsCommand extends ContainerAwareCommand {
 				$this->getContainer()->get("App\Service\Konachan")->parseItem($item);
 			} elseif($item->getWebsite() == "safebooru") {
 				$this->getContainer()->get("App\Service\Safebooru")->parseItem($item);
+			} elseif($item->getWebsite() == "sankakucomplex") {
+				$this->getContainer()->get("App\Service\SankakuComplex")->parseItem($item);
 			}
 
 			$i++;

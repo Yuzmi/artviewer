@@ -26,5 +26,8 @@ class ParseRssCommand extends ContainerAwareCommand {
 
 		$output->writeln("Parsing Safebooru...");
 		$this->getContainer()->get("App\Service\Safebooru")->parseRss();
+
+		$output->writeln("Parsing Sankaku Complex...");
+		$this->getContainer()->get("App\Service\SankakuComplex")->parseRss();
 	}
 }
